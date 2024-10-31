@@ -38,5 +38,5 @@ if __name__ == "__main__":
   if not args.ppo:
     model = PolicyGradient(env, config, args.seed)
   else:
-    PPO(env, config, args.seed)
+    model = PPO(env, config, args.seed)
   model.run()

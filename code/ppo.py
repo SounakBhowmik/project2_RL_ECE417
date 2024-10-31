@@ -49,6 +49,24 @@ class PPO(PolicyGradient):
     #######################################################
     #########   YOUR CODE HERE - 10-15 lines.   ###########
 
+    dist = self.policy.action_distribution(observations)
+    logprobs = dist.log_prob(actions)
+
+    # Calculate the ratio of current to old policy probabilities
+    ratios = torch.exp(logprobs - old_logprobs)
+
+    # Compute the PPO clipped objective
+    clip_value = self.eps_clip
+    surr1 = ratios * advantages
+    surr2 = torch.clamp(ratios, 1 - clip_value, 1 + clip_value) * advantages
+    loss = -torch.min(surr1, surr2).mean()  # Negative sign to maximize objective
+
+    # Update policy network
+    self.optimizer.zero_grad()
+    loss.backward()
+    self.optimizer.step()
+
+
     #######################################################
     #########          END YOUR CODE.          ############
 
@@ -142,7 +160,7 @@ class PPO(PolicyGradient):
     t = 0
 
     while num_episodes or t < self.config.batch_size:
-      state = env.reset()
+      state = env.reset()[0]
       states, actions, old_logprobs, rewards = [], [], [], []
       episode_reward = 0
 
@@ -153,7 +171,7 @@ class PPO(PolicyGradient):
         action, old_logprob = self.policy.act(states[-1][None], return_log_prob=True)
         assert old_logprob.shape == (1,)
         action, old_logprob = action[0], old_logprob[0]
-        state, reward, done, info = env.step(action)
+        state, reward, done, truncated,info = env.step(action)
         actions.append(action)
         old_logprobs.append(old_logprob)
         rewards.append(reward)

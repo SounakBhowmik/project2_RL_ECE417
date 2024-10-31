@@ -5,6 +5,24 @@ import torch.nn as nn
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # print(device)
 
+class MLP(nn.Module):
+    def __init__(self, input_size, output_size, n_layers, size):
+        super(MLP, self).__init__()
+        self.n_layers = n_layers
+        
+        # Linear layers
+        self.input_layer = nn.Linear(input_size, size)
+        self.hidden_layers = nn.ModuleList([nn.Linear(size, size) for _ in range(n_layers)])
+        #self.batchnorms = nn.ModuleList([nn.BatchNorm1d(size) for _ in range(n_layers)])
+        self.output_layer = nn.Linear(size, output_size)
+        
+    def forward(self, x):
+        x = torch.relu(self.input_layer(x))
+        for i in range(self.n_layers):
+            x = torch.relu(self.hidden_layers[i](x))
+            #x = self.batchnorms[i](x)
+        return torch.relu(self.output_layer(x))
+
 
 def build_mlp(input_size, output_size, n_layers, size):
   """
@@ -29,7 +47,7 @@ def build_mlp(input_size, output_size, n_layers, size):
   """
   #######################################################
   #########   YOUR CODE HERE - 7-15 lines.   ############
-
+  return MLP(input_size, output_size, n_layers, size)
   #######################################################
   #########          END YOUR CODE.          ############
 

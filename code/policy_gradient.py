@@ -203,6 +203,14 @@ class PolicyGradient(object):
       #######################################################
       #########   YOUR CODE HERE - 5-10 lines.   ############
 
+      rewards = path['reward']
+      returns = np.zeros(rewards.shape)
+      G_t = 0
+      for t in reversed(range(len(rewards))):
+          G_t = rewards[t] + self.config.gamma * G_t
+          returns[t] = G_t
+
+
       #######################################################
       #########          END YOUR CODE.          ############
       all_returns.append(returns)
@@ -227,7 +235,7 @@ class PolicyGradient(object):
     """
     #######################################################
     #########   YOUR CODE HERE - 1-2 lines.    ############
-
+    normalized_advantages = (advantages - np.mean(advantages))/ (np.std(advantages) + 1e-10) # To avoid division by zero
     #######################################################
     #########          END YOUR CODE.          ############
     return normalized_advantages

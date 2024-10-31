@@ -46,6 +46,13 @@ class BasePolicy:
     #######################################################
     #########   YOUR CODE HERE - 1-4 lines.    ############
 
+    distribution = self.action_distribution(observations)
+    sampled_actions = distribution.sample()
+    if return_log_prob:
+        log_probs = distribution.log_prob(sampled_actions).detach().numpy()
+    sampled_actions = sampled_actions.numpy()
+
+
     #######################################################
     #########          END YOUR CODE.          ############
 
@@ -72,6 +79,10 @@ class CategoricalPolicy(BasePolicy, nn.Module):
     #######################################################
     #########   YOUR CODE HERE - 1-2 lines.    ############
 
+    logits = self.network(observations)
+    distribution = torch.distributions.Categorical(logits=logits)
+
+
     #######################################################
     #########          END YOUR CODE.          ############
     return distribution
@@ -89,7 +100,7 @@ class GaussianPolicy(BasePolicy, nn.Module):
     self.network = network
     #######################################################
     #########   YOUR CODE HERE - 1 line.       ############
-
+    self.log_std = nn.Parameter(torch.zeros(action_dim))
     #######################################################
     #########          END YOUR CODE.          ############
 
@@ -105,10 +116,10 @@ class GaussianPolicy(BasePolicy, nn.Module):
     """
     #######################################################
     #########   YOUR CODE HERE - 1 line.       ############
-
+    stds = torch.exp(self.log_std)
     #######################################################
     #########          END YOUR CODE.          ############
-    return std
+    return stds
 
   def action_distribution(self, observations):
     """
@@ -129,6 +140,11 @@ class GaussianPolicy(BasePolicy, nn.Module):
     """
     #######################################################
     #########   YOUR CODE HERE - 2-4 lines.    ############
+
+    mean = self.network(observations)
+    std = self.std()
+    covariance_matrix = torch.diag_embed(std**2)
+    distribution = torch.distributions.MultivariateNormal(mean, covariance_matrix)
 
     #######################################################
     #########          END YOUR CODE.          ############
